@@ -1075,8 +1075,176 @@ GET  /settings/{key}     → 個別設定取得
 
 ## 管理パネル (Admin)
 
-パス: `/control-room-x9k2`
-全136エンドポイント確認済み。全て `403: 管理者権限が必要です` を返す。
+### 概要
+
+| 項目 | 詳細 |
+|------|------|
+| フロントエンドURL | `https://karotter.com/admin` |
+| APIベースパス | `/control-room-x9k2` |
+| JSチャンク | `Admin-BX1OyPEg.js` |
+| 認証 | `user.isAdmin === true` が必要 |
+| 非管理者アクセス | 「アクセス拒否 — 管理者権限が必要です」表示 |
+| 全APIレスポンス | `403: 管理者権限が必要です` |
+| 確認済みエンドポイント | 136 |
+
+### UIタブ構成 (JSチャンクから確認)
+
+| タブID | ラベル | 説明 |
+|--------|--------|------|
+| `dashboard` | ダッシュボード | システム統計 (総ユーザー数、総カロート数、24h活動ユーザー、未対応通報) |
+| `users` | ユーザー管理 | 検索、BAN/解除、フラグ変更、公式マーク付与、アカウント編集、削除 |
+| `posts` | カロート管理 | 検索、R18強制、非表示、削除 |
+| `stories` | ストーリー管理 | 検索、R18強制、非表示、削除、有効期限表示 |
+| `recommend` | おすすめ β | おすすめアルゴリズムテスト (userId指定、スコア詳細表示) |
+| `trending` | トレンド β | トレンドアルゴリズムテスト (velocity, uniqueActors, engagementRate) |
+| `survey` | アンケート | おすすめ満足度アンケート結果 (投票数、満足度スコア) |
+| `beta-experiment` | Beta実験 | A/Bテスト結果 (A〜E 5バリアント、userId%5で振り分け) |
+
+### ダッシュボード統計
+
+```
+GET /control-room-x9k2/analytics
+
+Response:
+{
+  "totalUsers": 12000,
+  "totalPosts": 120000,
+  "activeUsers": 2300,     // 24時間アクティブ
+  "totalReports": 5        // 未対応通報数
+}
+```
+
+### ユーザー管理
+
+管理者がユーザーに対して行える操作:
+
+**アカウント情報変更** (`PATCH /control-room-x9k2/users/{id}/account`):
+- username、displayName の変更
+- email 変更（任意）
+- password 強制リセット（任意）
+- emailVerified フラグの切り替え
+
+**公式マーク** (`PATCH /control-room-x9k2/users/{id}/official-mark`):
+
+| 値 | ラベル |
+|-----|--------|
+| `YELLOW` | 黄色: 認証済み団体マーク |
+| `PURPLE` | 紫: 運営マーク |
+| `BLUE` | 青: 本人マーク |
+| `GRAY` | 灰色: 政府関係者マーク |
+| `BLACK` | 黒: 認証済みマーク |
+| `RED` | 赤: 認証済みマーク |
+| `GREEN` | 緑: 認証済みマーク |
+| `ORANGE` | オレンジ: 認証済みマーク |
+
+- 複数マーク同時付与可能（配列で管理）
+
+**フラグ操作** (`PATCH /control-room-x9k2/users/{id}/flags`):
+
+| フラグ | 説明 |
+|--------|------|
+| `isParodyAccount` | パロディアカウント |
+| `isBotAccount` | BOTユーザー |
+| `adminForceHidden` | 管理者非表示 |
+| `adminForceParody` | パロディ強制 |
+| `adminForceBot` | BOT強制 |
+| `showBotAccounts` | BOT表示許可 |
+| `showHiddenPosts` | 非表示閲覧許可 |
+| `showR18Content` | R18表示許可 |
+| `hideProfileFromMinors` | 未成年にプロフ非表示 |
+
+**BAN** (`PATCH /control-room-x9k2/users/{id}/ban`):
+- BAN時に `reason` を指定
+- BAN中ユーザーには赤い「BAN中」バッジ表示
+- `unban` で解除
+
+**削除** (`DELETE /control-room-x9k2/users/{id}`):
+- 確認ダイアログ:「@{username} を削除しますか？この操作は取り消せません。」
+
+### 投稿管理
+
+管理者が投稿に対して行える操作:
+- `adminForceR18`: R18強制フラグ
+- `adminForceHidden`: 非表示フラグ
+- 投稿削除
+
+表示情報: viewsCount、likesCount、rekarotsCount、repliesCount
+
+### ストーリー管理
+
+投稿管理と同様のフラグ操作に加え:
+- mediaType（画像/動画）のプレビュー表示
+- caption表示
+- visibility（PUBLIC/FOLLOWERS/サークル）
+- 有効期限（expiresAt）の表示
+
+### おすすめアルゴリズムテスト (β)
+
+```
+GET /control-room-x9k2/test-recommend?limit=30&userId={id}
+
+Response:
+{
+  "targetUser": { "id", "username", "displayName" },
+  "followingCount": 100,
+  "candidateCount": 500,
+  "signalsSummary": {
+    "authorAffinityCount": 50,
+    "socialProofCount": 30,
+    "mutualFollowCount": 20,
+    "tagAffinityTop10": [{"tag": "プログラミング", "score": 85}]
+  },
+  "rawTopByScore": [{"rank", "author", "score", "trending"}],
+  "ranked": [{
+    "rank", "author", "content",
+    "stats": {"likes", "rekarots", "replies", "views"},
+    "ageHours",
+    "scores": {
+      "engagement", "freshness", "authorAffinity",
+      "graph", "socialProof", "tagAffinity",
+      "inNetwork", "totalRecommend"
+    }
+  }]
+}
+```
+
+**A/Bテスト 5バリアント**:
+
+| タイプ | コンセプト | 新しさ | エンゲージメント | 会話 | 発見 |
+|--------|-----------|--------|----------------|------|------|
+| A | 新しさ最優先 | ★★★ | ★ | - | - |
+| B | 質重視 | ★ | ★★★ | ★ | - |
+| C | バランス | ★★ | ★★ | ★ | ★ |
+| D | 会話重視 | ★★ | ★★ | ★★★ | - |
+| E | 発見重視 | ★★ | ★★ | ★ | ★★★ |
+
+ユーザーは `userId % 5` でバリアントに自動振り分け。
+
+### トレンドアルゴリズムテスト (β)
+
+```
+GET /control-room-x9k2/test-trending?limit=30
+
+Response:
+{
+  "candidateCount": 200,
+  "rawTop10": [{"rank", "author", "total", "velocity", "uniqueActors"}],
+  "ranked": [{
+    "rank", "author", "content",
+    "stats": {"likes", "rekarots", "replies", "views"},
+    "ageHours",
+    "trendBreakdown": {
+      "velocity", "uniqueActors", "engagementRate", "freshness", "total"
+    },
+    "windowStats": {
+      "likes1h", "likes6h", "likes24h",
+      "rekarots1h", "rekarots6h", "rekarots24h",
+      "replies1h", "replies6h", "replies24h",
+      "uniqueActors"
+    }
+  }]
+}
+```
 
 ### コア (3)
 ```
