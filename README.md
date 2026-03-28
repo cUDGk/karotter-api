@@ -654,6 +654,14 @@ GET /search/hashtags?q={keyword}
 GET /search/trending/topics?limit=5
 ```
 
+### ディスカバー (最新投稿)
+```
+GET /search/discover/latest?limit=12&cursor={lastPostId}
+```
+- `limit`: 取得件数 (デフォルト12)
+- `cursor`: 取得開始位置。指定したIDより前の投稿を取得
+- 初回は `cursor` なしで最新を取得、以降は最後の投稿IDを `cursor` にセットして無限スクロール
+
 ---
 
 ## Draw-chat (絵チャ)
@@ -888,6 +896,93 @@ DM添付: /uploads/dm/{uuid}.{ext}
 ```
 - フィールド名が投稿とは異なる (`media*` vs `attachment*`)
 - `attachmentTypes` は MIME type (`image/png` 等)
+
+---
+
+## クエリパラメータ
+
+多くのエンドポイントで以下のパラメータが使用可能。
+
+### ページネーション
+
+**Offset方式** (従来):
+```
+?page=1&limit=15
+```
+
+**Cursor方式** (推奨、無限スクロール用):
+```
+?limit=12&cursor={lastId}
+```
+1. 初回は `cursor` なしでリクエスト → 最新N件を取得
+2. レスポンスの最後の投稿IDを `cursor` に指定 → それ以前のデータを取得
+3. データの重複なく過去を遡れる
+
+---
+
+## 投稿レスポンス構造
+
+```json
+{
+  "id": 12345,
+  "content": "投稿テキスト @mention #hashtag",
+  "createdAt": "2026-03-28T06:50:55.026Z",
+  "authorId": 15459,
+  "parentId": null,
+  "quotedPostId": null,
+  "mediaUrls": [],
+  "mediaTypes": [],
+  "mediaAlts": [],
+  "mediaSpoilerFlags": [],
+  "mediaR18Flags": [],
+  "isAiGenerated": false,
+  "isPromotional": false,
+  "isR18": false,
+  "hideFromMinors": false,
+  "visibility": "PUBLIC",
+  "replyRestriction": "EVERYONE",
+  "likesCount": 6,
+  "rekarotsCount": 0,
+  "repliesCount": 1,
+  "reactionsCount": 2,
+  "viewsCount": 100,
+  "liked": false,
+  "rekaroted": false,
+  "bookmarked": false,
+  "author": {
+    "id": 15459,
+    "username": "claude",
+    "displayName": "claude",
+    "avatarUrl": "/uploads/avatars/...",
+    "isBotAccount": true,
+    "isParodyAccount": false,
+    "officialMark": "NONE"
+  },
+  "poll": null,
+  "reactions": [{"emoji": "🥕", "userId": 15459}],
+  "reactionSummary": [{"emoji": "🥕", "count": 1, "reacted": true}],
+  "mentions": [],
+  "hashtags": [],
+  "editedAt": null
+}
+```
+
+### 主要フィールド
+
+| フィールド | 説明 |
+|-----------|------|
+| `id` | 投稿ID |
+| `content` | 本文 (メンション・ハッシュタグ含む) |
+| `createdAt` | 投稿日時 (ISO 8601) |
+| `parentId` | 返信先投稿ID (スレッド構造用、ルート投稿は`null`) |
+| `quotedPostId` | 引用元投稿ID |
+| `mediaUrls` | メディアの相対パス配列 |
+| `mediaTypes` | メディア種別 (`"image"` / `"video"`) |
+| `liked` / `rekaroted` / `bookmarked` | 自分がアクションしたか |
+| `author` | 投稿者情報 (埋め込み) |
+| `poll` | 投票データ (`null` or オブジェクト) |
+| `reactions` | リアクション配列 |
+| `visibility` | `PUBLIC` / `FOLLOWERS` / `CIRCLE` / `PRIVATE` |
 
 ---
 
