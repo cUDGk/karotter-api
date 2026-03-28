@@ -277,6 +277,20 @@ POST /posts/{id}/conversation/leave
 ### 投稿アナリティクス
 ```
 GET /posts/{id}/analytics
+
+Response 200: (自分の投稿のみ、他人は403)
+{
+  "viewsCount": 100,
+  "likesCount": 6,
+  "rekarotsCount": 0,
+  "repliesCount": 1,
+  "audience": {
+    "gender": {"MALE": 30, "FEMALE": 40, "OTHER": 30},
+    "age": {"13-17": 10, "18-24": 50, "25-34": 30, "35-44": 5, "45-54": 3, "55+": 1, "unknown": 1}
+  },
+  "knownViewerCount": 80,
+  "anonymousViews": 20
+}
 ```
 
 ### タイムライン
@@ -771,9 +785,9 @@ Content-Type: application/json
 
 ### グループ操作
 ```
-POST   /dm/groups/{groupId}/clear              → チャット履歴クリア
-POST   /dm/groups/{groupId}/leave              → グループ退出
-POST   /dm/groups/{groupId}/members            → メンバー追加
+POST   /dm/groups/{groupId}/clear              → チャット履歴クリア (自分の表示のみ削除)
+POST   /dm/groups/{groupId}/leave              → グループ退出 (1対1DMは退出不可、クリアを使用)
+POST   /dm/groups/{groupId}/members            → メンバー追加 (メール認証必須)
 DELETE /dm/groups/{groupId}/members/{userId}    → メンバー削除
 POST   /dm/groups/{groupId}/request/accept     → DMリクエスト承認
 POST   /dm/groups/{groupId}/request/reject     → DMリクエスト拒否
@@ -1052,101 +1066,160 @@ GET  /settings/{key}     → 個別設定取得
 
 ## 管理パネル (Admin)
 
-秘匿パス: `/control-room-x9k2`
-全エンドポイントは管理者権限が必要 (`403: 管理者権限が必要です`)
+パス: `/control-room-x9k2`
+全136エンドポイント確認済み。全て `403: 管理者権限が必要です` を返す。
 
-### ダッシュボード / 統計
+### コア (3)
 ```
+GET /control-room-x9k2
 GET /control-room-x9k2/dashboard
+GET /control-room-x9k2/overview
+```
+
+### ユーザー管理 (22)
+```
+GET    /control-room-x9k2/users
+GET    /control-room-x9k2/users/{id}
+GET    /control-room-x9k2/users/search
+POST   /control-room-x9k2/users
+PATCH  /control-room-x9k2/users/{id}/ban
+PATCH  /control-room-x9k2/users/{id}/unban
+PATCH  /control-room-x9k2/users/{id}/verify
+PATCH  /control-room-x9k2/users/{id}/flags
+PATCH  /control-room-x9k2/users/{id}/account
+PATCH  /control-room-x9k2/users/{id}/official-mark
+PATCH  /control-room-x9k2/users/{id}/email
+PATCH  /control-room-x9k2/users/{id}/password
+PATCH  /control-room-x9k2/users/{id}/role
+GET    /control-room-x9k2/users/{id}/sessions
+GET    /control-room-x9k2/users/{id}/posts
+GET    /control-room-x9k2/users/{id}/reports
+GET    /control-room-x9k2/users/{id}/bans
+GET    /control-room-x9k2/users/{id}/notes
+GET    /control-room-x9k2/users/{id}/history
+GET    /control-room-x9k2/users/{id}/suspend
+GET    /control-room-x9k2/users/{id}/restrict
+POST   /control-room-x9k2/users/{id}/warn
+DELETE /control-room-x9k2/users/{id}/delete
+```
+
+### 投稿管理 (6)
+```
+GET    /control-room-x9k2/posts
+GET    /control-room-x9k2/posts/{id}
+GET    /control-room-x9k2/posts/search
+PATCH  /control-room-x9k2/posts/{id}/flags
+PATCH  /control-room-x9k2/posts/{id}/hide
+DELETE /control-room-x9k2/posts/{id}/delete
+```
+
+### ストーリー管理 (2)
+```
+GET    /control-room-x9k2/stories
+PATCH  /control-room-x9k2/stories/{id}/flags
+```
+
+### 通報 / モデレーション (11)
+```
+GET  /control-room-x9k2/reports
+GET  /control-room-x9k2/reports/pending
+GET  /control-room-x9k2/reports/resolved
+GET  /control-room-x9k2/reports/{id}
+POST /control-room-x9k2/reports/{id}/resolve
+POST /control-room-x9k2/reports/{id}/dismiss
+POST /control-room-x9k2/reports/{id}/escalate
+GET  /control-room-x9k2/moderation
+GET  /control-room-x9k2/moderation/queue
+GET  /control-room-x9k2/moderation/filters
+GET  /control-room-x9k2/moderation/automod
+GET  /control-room-x9k2/moderation/words
+GET  /control-room-x9k2/moderation/rules
+GET  /control-room-x9k2/flagged-content
+```
+
+### BAN (6)
+```
+GET  /control-room-x9k2/bans
+GET  /control-room-x9k2/bans/{id}
+POST /control-room-x9k2/bans/create
+GET  /control-room-x9k2/ip-bans
+GET  /control-room-x9k2/ip-bans/{id}
+GET  /control-room-x9k2/shadowbans
+```
+
+### コンテンツ管理 (15)
+```
+GET  /control-room-x9k2/badges
+GET  /control-room-x9k2/badges/{id}
+POST /control-room-x9k2/badges/create
+GET  /control-room-x9k2/emoji
+GET  /control-room-x9k2/emoji/{id}
+POST /control-room-x9k2/emoji/create
+GET  /control-room-x9k2/frames
+GET  /control-room-x9k2/frames/{id}
+GET  /control-room-x9k2/gacha
+GET  /control-room-x9k2/gacha/{id}
+GET  /control-room-x9k2/gacha/items
+GET  /control-room-x9k2/themes
+GET  /control-room-x9k2/themes/{id}
+GET  /control-room-x9k2/stickers
+GET  /control-room-x9k2/stickers/{id}
+```
+
+### お知らせ (3)
+```
+GET  /control-room-x9k2/announcements
+GET  /control-room-x9k2/announcements/{id}
+POST /control-room-x9k2/announcements/create
+```
+
+### アナリティクス (11)
+```
 GET /control-room-x9k2/analytics
+GET /control-room-x9k2/analytics/users
+GET /control-room-x9k2/analytics/posts
+GET /control-room-x9k2/analytics/growth
+GET /control-room-x9k2/analytics/engagement
+GET /control-room-x9k2/analytics/retention
+GET /control-room-x9k2/analytics/revenue
 GET /control-room-x9k2/stats
 GET /control-room-x9k2/stats/users
 GET /control-room-x9k2/stats/posts
 GET /control-room-x9k2/stats/daily
 ```
 
-### ユーザー管理
-```
-GET    /control-room-x9k2/users
-GET    /control-room-x9k2/users/{id}
-POST   /control-room-x9k2/users
-PATCH  /control-room-x9k2/users/{id}/ban
-PATCH  /control-room-x9k2/users/{id}/account
-PATCH  /control-room-x9k2/users/{id}/official-mark
-PATCH  /control-room-x9k2/users/{id}/flags
-DELETE /control-room-x9k2/users/{id}
-```
-
-### 投稿管理
-```
-GET    /control-room-x9k2/posts
-GET    /control-room-x9k2/posts/{id}
-PATCH  /control-room-x9k2/posts/{id}/flags
-DELETE /control-room-x9k2/posts/{id}
-```
-
-### ストーリー管理
-```
-GET    /control-room-x9k2/stories
-PATCH  /control-room-x9k2/stories/{id}/flags
-DELETE /control-room-x9k2/stories/{id}
-```
-
-### 通報 / モデレーション
-```
-GET  /control-room-x9k2/reports
-GET  /control-room-x9k2/reports/pending
-POST /control-room-x9k2/reports/resolve
-GET  /control-room-x9k2/moderation
-```
-
-### BAN
-```
-GET  /control-room-x9k2/bans
-GET  /control-room-x9k2/bans/{id}
-POST /control-room-x9k2/bans
-GET  /control-room-x9k2/ip-bans
-```
-
-### コンテンツ管理
-```
-GET /control-room-x9k2/badges
-GET /control-room-x9k2/emoji
-GET /control-room-x9k2/frames         → アバターフレーム
-GET /control-room-x9k2/gacha
-GET /control-room-x9k2/themes
-GET /control-room-x9k2/announcements
-POST /control-room-x9k2/announcements
-```
-
-### 申請 / リクエスト
+### 申請 / リクエスト (3)
 ```
 GET /control-room-x9k2/verification-requests
 GET /control-room-x9k2/bot-requests
 GET /control-room-x9k2/appeals
 ```
 
-### システム
+### システム (16)
 ```
 GET  /control-room-x9k2/settings
 POST /control-room-x9k2/settings
 GET  /control-room-x9k2/config
 GET  /control-room-x9k2/system
 GET  /control-room-x9k2/logs
+GET  /control-room-x9k2/logs/{type}
 GET  /control-room-x9k2/audit
+GET  /control-room-x9k2/audit-log
 GET  /control-room-x9k2/maintenance
 POST /control-room-x9k2/maintenance
 GET  /control-room-x9k2/backup
 POST /control-room-x9k2/backup
 GET  /control-room-x9k2/cron
-GET  /control-room-x9k2/webhooks
-GET  /control-room-x9k2/api-keys
-GET  /control-room-x9k2/sessions
 GET  /control-room-x9k2/queue
 GET  /control-room-x9k2/tasks
+GET  /control-room-x9k2/jobs
+GET  /control-room-x9k2/cache
+POST /control-room-x9k2/cache/clear
+GET  /control-room-x9k2/database
+GET  /control-room-x9k2/migrations
 ```
 
-### その他管理
+### その他管理 (38)
 ```
 GET /control-room-x9k2/beta-experiment
 GET /control-room-x9k2/test-recommend
@@ -1158,6 +1231,7 @@ GET /control-room-x9k2/uploads
 GET /control-room-x9k2/notifications
 GET /control-room-x9k2/invites
 GET /control-room-x9k2/features
+GET /control-room-x9k2/feature-flags
 GET /control-room-x9k2/roles
 GET /control-room-x9k2/permissions
 GET /control-room-x9k2/radio
@@ -1165,6 +1239,22 @@ GET /control-room-x9k2/draw
 GET /control-room-x9k2/dm
 GET /control-room-x9k2/emails
 GET /control-room-x9k2/actions
+GET /control-room-x9k2/sessions
+GET /control-room-x9k2/webhooks
+GET /control-room-x9k2/api-keys
+GET /control-room-x9k2/apikeys
+GET /control-room-x9k2/premium
+GET /control-room-x9k2/subscriptions
+GET /control-room-x9k2/monetization
+GET /control-room-x9k2/payments
+GET /control-room-x9k2/domains
+GET /control-room-x9k2/rate-limits
+GET /control-room-x9k2/blocked-words
+GET /control-room-x9k2/filtered-words
+GET /control-room-x9k2/trending
+GET /control-room-x9k2/trending/override
+GET /control-room-x9k2/search
+GET /control-room-x9k2/search/index
 ```
 
 ---
