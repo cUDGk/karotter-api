@@ -138,6 +138,8 @@ GET  /auth/sessions                  → 全セッション一覧
 DELETE /auth/sessions/:id            → 特定セッション削除
 DELETE /auth/sessions/others         → 他の全セッションを削除
 POST /auth/switch-session            → セッション切り替え
+  Body: {"sessionId": "..."} または {"userId": ...}
+  ※ セッションIDまたはユーザーIDが必要
 POST /auth/session-unread-snapshots  → 未読スナップショット
 ```
 
@@ -448,7 +450,25 @@ GET /users/username/quota
 ### プロフィール更新
 ```
 PATCH /users/profile
+Content-Type: application/json
+
+{
+  "displayName": "表示名",
+  "bio": "自己紹介",
+  "websiteUrl": "https://example.com",
+  "location": "東京",
+  "birthday": "2000-01-01",
+  "birthdayVisibility": "PRIVATE",
+  "gender": "OTHER"
+}
+
+Response 200:
+{
+  "message": "プロフィールを更新しました",
+  "user": { ... }
+}
 ```
+- 変更したいフィールドのみ送信可 (空オブジェクトでも200を返す)
 
 ### ステータス更新
 ```
@@ -779,6 +799,22 @@ Content-Type: application/json
 ```
 POST /contact
 Content-Type: application/json
+```
+
+---
+
+## 規約
+
+### 規約バージョン確認
+```
+GET /legal/summary
+
+Response 200:
+{
+  "version": "terms:2026-03-27|privacy:2026-03-27",
+  "termsEffectiveDate": "2026-03-27",
+  "privacyEffectiveDate": "2026-03-27"
+}
 ```
 
 ---
