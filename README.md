@@ -928,37 +928,9 @@ DM添付: /uploads/dm/{uuid}.{ext}
 
 ---
 
-## Bot実装例 (Python)
+## 実装例 (Python)
 
-### セットアップ
-
-```python
-import requests
-import json
-import time
-
-BASE = "https://api.karotter.com/api"
-CREDS = {"identifier": "your_username", "password": "your_password", "gender": "OTHER"}
-HEADERS = {
-    "X-Client-Type": "web",
-    "X-Device-Id": "550e8400-e29b-41d4-a716-446655440000"
-}
-
-def login():
-    sess = requests.Session()
-    r = sess.post(f"{BASE}/auth/login", json=CREDS, headers=HEADERS)
-    token = r.json()["accessToken"]
-    r2 = sess.get(f"{BASE}/auth/csrf-token",
-                   headers={**HEADERS, "Authorization": f"Bearer {token}"})
-    csrf = r2.json()["csrfToken"]
-    return sess, {
-        **HEADERS,
-        "Authorization": f"Bearer {token}",
-        "X-CSRF-Token": csrf
-    }
-
-sess, headers = login()
-```
+以下の例では認証済みの `sess` (requests.Session) と `headers` (認証ヘッダー) を使用する前提。
 
 ### テキスト投稿
 
@@ -1157,68 +1129,6 @@ def vote(post_id, option_id):
 
 # 投票データは GET /posts/{id} の post.poll に含まれる
 # 再度POSTで投票取り消し（トグル式）
-```
-
-### 絵チャにレイヤー追加
-
-```python
-import base64
-
-def upload_draw_layer(room_id, image_path, layer_name="new_layer"):
-    # 1. 既存レイヤーを取得
-    r = sess.get(f"{BASE}/draw/rooms/{room_id}", headers=headers)
-    existing = r.json().get("layers", [])
-
-    # 2. 新しいレイヤーを追加
-    with open(image_path, "rb") as f:
-        b64 = base64.b64encode(f.read()).decode()
-
-    new_layer = {
-        "id": f"layer_{int(time.time())}",
-        "name": layer_name,
-        "order": len(existing),
-        "visible": True,
-        "opacity": 1,
-        "dataUrl": f"data:image/png;base64,{b64}"
-    }
-    all_layers = existing + [new_layer]
-
-    # 3. 全レイヤーを一括送信（しないと既存レイヤーが消える）
-    sess.put(f"{BASE}/draw/rooms/{room_id}/layers",
-        json={"layers": all_layers}, headers=headers)
-
-# 合計ペイロード上限: 約5MB
-```
-
-### Botループ（2分間隔）
-
-```python
-import time
-
-INTERVAL = 120  # 2分
-replied_ids = set()
-
-while True:
-    try:
-        # トークンリフレッシュ（30分で切れるため）
-        sess, headers = login()
-
-        # 通知チェック & 返信
-        for notif in get_notifications():
-            if notif["id"] in replied_ids:
-                continue
-            if notif["type"] in ("REPLY", "MENTION"):
-                post = notif["post"]
-                reply(f"返信ありがとう！", post["id"])
-                replied_ids.add(notif["id"])
-
-        # フォロバ
-        auto_followback(my_user_id)
-
-    except Exception as e:
-        print(f"Error: {e}")
-
-    time.sleep(INTERVAL)
 ```
 
 ### Developer API (APIキー認証)
