@@ -130,6 +130,8 @@ POST /auth/reset-password
 ```
 POST /auth/verify-email
 POST /auth/me/email/resend
+POST /auth/resend-verification    → メール認証再送 (600秒クールダウン)
+POST /auth/me/email               → メールアドレス変更
 ```
 
 ### セッション管理
@@ -137,6 +139,7 @@ POST /auth/me/email/resend
 GET  /auth/sessions                  → 全セッション一覧
 DELETE /auth/sessions/:id            → 特定セッション削除
 DELETE /auth/sessions/others         → 他の全セッションを削除
+DELETE /auth/sessions/all            → 全セッション削除
 POST /auth/switch-session            → セッション切り替え
   Body: {"sessionId": "..."} または {"userId": ...}
   ※ セッションIDまたはユーザーIDが必要
@@ -261,11 +264,28 @@ GET /posts/{id}/quotes
 GET /posts/{id}/rekarots
 ```
 
+### 投稿のリアクション一覧
+```
+GET /posts/{id}/reactions
+```
+
+### 会話スレッドから離脱
+```
+POST /posts/{id}/conversation/leave
+```
+
+### 投稿アナリティクス
+```
+GET /posts/{id}/analytics
+```
+
 ### タイムライン
 ```
 GET /posts/timeline?page=1&limit=15&mode=latest
-Authorization: Bearer {token}
+```
+- `mode`: `latest` (最新), `trending` (トレンド), `following` (フォロー中)
 
+```
 Response 200:
 {
   "posts": [...],
@@ -286,9 +306,10 @@ GET /posts/trending
 GET /posts/recommended
 ```
 
-### 予約投稿一覧
+### 予約投稿
 ```
-GET /posts/scheduled/me
+GET    /posts/scheduled/me       → 一覧
+DELETE /posts/scheduled/{id}     → 予約投稿削除
 ```
 
 ### 自分の返信
@@ -417,19 +438,30 @@ GET /users/{userId}/following?limit=1000
 DELETE /follow/{userId}
 ```
 
-### フォローリクエスト (保留中)
+### フォロワー削除
 ```
-GET /follow/requests/pending
-```
-
-### ブロック一覧
-```
-GET /follow/block
+DELETE /follow/follower/{userId}    → フォロワーを外す
 ```
 
-### ミュート一覧
+### フォローリクエスト
 ```
-GET /follow/mute
+GET  /follow/requests/pending          → 保留中の受信リクエスト
+POST /follow/requests/{id}/accept      → 承認
+POST /follow/requests/{id}/reject      → 拒否
+```
+
+### ブロック
+```
+GET    /follow/block              → ブロック一覧
+POST   /follow/block/{userId}     → ブロック追加
+DELETE /follow/block/{userId}     → ブロック解除
+```
+
+### ミュート
+```
+GET    /follow/mute               → ミュート一覧
+POST   /follow/mute/{userId}      → ミュート追加
+DELETE /follow/mute/{userId}      → ミュート解除
 ```
 
 ---
@@ -527,13 +559,38 @@ Response 200:
 
 ### ステータス更新
 ```
-PUT /users/status
+PATCH /users/status
 ```
 
-### アバター更新
+### パスワード変更
 ```
-POST /profile/avatar
-Content-Type: multipart/form-data
+PATCH /users/password
+```
+
+### ユーザー名変更
+```
+PATCH /users/username
+```
+
+### ピン留め投稿変更
+```
+PATCH /users/profile/pinned-post
+```
+
+### ユーザー設定
+```
+PATCH /users/settings
+```
+
+### アカウント削除
+```
+DELETE /users/account
+```
+
+### アバター / ヘッダー更新
+```
+POST /profile/avatar    → アバター (multipart/form-data)
+POST /profile/header    → ヘッダー画像 (multipart/form-data)
 ```
 
 ---
@@ -571,6 +628,17 @@ GET /notifications/unread/count
 ### グループ化された投稿通知
 ```
 GET /notifications/grouped-posts
+```
+
+### 全通知既読
+```
+PATCH /notifications/read-all
+```
+
+### 通知削除
+```
+DELETE /notifications/{id}        → 個別削除
+DELETE /notifications/all         → 全削除
 ```
 
 ### プッシュ通知登録
@@ -691,6 +759,34 @@ Response 201:
 POST /dm/groups/{groupId}/read
 ```
 
+### 1対1 DM開始
+```
+POST /dm/start
+Content-Type: application/json
+
+{
+  "userId": 12345
+}
+```
+
+### グループ操作
+```
+POST   /dm/groups/{groupId}/clear              → チャット履歴クリア
+POST   /dm/groups/{groupId}/leave              → グループ退出
+POST   /dm/groups/{groupId}/members            → メンバー追加
+DELETE /dm/groups/{groupId}/members/{userId}    → メンバー削除
+POST   /dm/groups/{groupId}/request/accept     → DMリクエスト承認
+POST   /dm/groups/{groupId}/request/reject     → DMリクエスト拒否
+```
+
+### メッセージ操作
+```
+DELETE /dm/messages/{id}              → メッセージ削除
+PATCH  /dm/messages/{id}              → メッセージ編集
+POST   /dm/messages/{id}/reactions    → メッセージリアクション
+POST   /dm/messages/{id}/poll/vote    → DM内投票
+```
+
 ### 通話
 ```
 GET  /dm/groups/{groupId}/call          → 通話状態確認
@@ -800,6 +896,11 @@ DELETE /draw/rooms/{roomId}
 ```
 - オーナーのみ
 
+### 招待リンクのローテーション
+```
+POST /draw/rooms/{roomId}/invite/rotate
+```
+
 ---
 
 ## ラジオ (Radio)
@@ -825,6 +926,27 @@ GET /radio/active
 GET /radio/{id}
 ```
 
+### ラジオ内メッセージ
+```
+GET  /radio/{id}/messages    → メッセージ一覧
+POST /radio/{id}/messages    → メッセージ送信
+```
+
+### ラジオ設定
+```
+PATCH /radio/{id}/settings
+```
+
+### 参加者管理
+```
+PATCH  /radio/{id}/participants/{userId}/role            → ロール変更
+PATCH  /radio/{id}/participants/{userId}/mute            → ミュート
+POST   /radio/{id}/participants/{userId}/invite-speaker  → スピーカー招待
+DELETE /radio/{id}/participants/{userId}/invite-speaker  → スピーカー招待取消
+POST   /radio/{id}/accept-speaker-invite                → スピーカー招待承諾
+POST   /radio/{id}/request-speaker                      → スピーカーリクエスト
+```
+
 ### ラジオ参加 / 退出 / 終了
 ```
 POST /radio/{id}/join
@@ -838,21 +960,33 @@ POST /radio/{id}/end
 
 ### サークル
 ```
-GET  /social/circles    → 一覧
-POST /social/circles    → 作成
+GET    /social/circles                        → 一覧
+POST   /social/circles                        → 作成
+DELETE /social/circles/{id}                   → 削除
+POST   /social/circles/{id}/members           → メンバー追加
+DELETE /social/circles/{id}/members/{userId}  → メンバー削除
 ```
 
 ### リスト
 ```
-GET  /social/lists      → 一覧
-POST /social/lists      → 作成
+GET    /social/lists                          → 一覧
+POST   /social/lists                          → 作成
+DELETE /social/lists/{id}                     → 削除
+POST   /social/lists/{id}/members             → メンバー追加
+DELETE /social/lists/{id}/members/{userId}    → メンバー削除
+GET    /social/lists/{id}/posts               → リストの投稿一覧
 ```
 
 ### ストーリー
 ```
-GET    /social/stories        → ストーリー一覧
-POST   /social/stories        → ストーリー投稿 (画像/動画)
-DELETE /social/stories/{id}   → ストーリー削除 (owner only)
+GET    /social/stories                → ストーリー一覧
+POST   /social/stories                → ストーリー投稿 (画像/動画)
+DELETE /social/stories/{id}           → ストーリー削除
+GET    /social/stories/user/{userId}  → ユーザーのストーリー
+GET    /social/stories/{id}/viewers   → 閲覧者一覧
+POST   /social/stories/{id}/views    → 閲覧記録
+POST   /social/stories/{id}/like     → ストーリーいいね
+DELETE /social/stories/{id}/like     → ストーリーいいね取消
 ```
 
 ### リンクプレビュー
@@ -894,6 +1028,143 @@ GET /legal/privacy    → プライバシーポリシー全文
   "termsEffectiveDate": "2026-03-27",
   "privacyEffectiveDate": "2026-03-27"
 }
+```
+
+---
+
+## 埋め込み (Embed)
+
+```
+GET /embed/{postId}     → 投稿の埋め込みHTML
+GET /oembed?url={url}   → oEmbed形式
+```
+
+---
+
+## 設定
+
+```
+GET  /settings           → 全設定取得
+GET  /settings/{key}     → 個別設定取得
+```
+
+---
+
+## 管理パネル (Admin)
+
+秘匿パス: `/control-room-x9k2`
+全エンドポイントは管理者権限が必要 (`403: 管理者権限が必要です`)
+
+### ダッシュボード / 統計
+```
+GET /control-room-x9k2/dashboard
+GET /control-room-x9k2/analytics
+GET /control-room-x9k2/stats
+GET /control-room-x9k2/stats/users
+GET /control-room-x9k2/stats/posts
+GET /control-room-x9k2/stats/daily
+```
+
+### ユーザー管理
+```
+GET    /control-room-x9k2/users
+GET    /control-room-x9k2/users/{id}
+POST   /control-room-x9k2/users
+PATCH  /control-room-x9k2/users/{id}/ban
+PATCH  /control-room-x9k2/users/{id}/account
+PATCH  /control-room-x9k2/users/{id}/official-mark
+PATCH  /control-room-x9k2/users/{id}/flags
+DELETE /control-room-x9k2/users/{id}
+```
+
+### 投稿管理
+```
+GET    /control-room-x9k2/posts
+GET    /control-room-x9k2/posts/{id}
+PATCH  /control-room-x9k2/posts/{id}/flags
+DELETE /control-room-x9k2/posts/{id}
+```
+
+### ストーリー管理
+```
+GET    /control-room-x9k2/stories
+PATCH  /control-room-x9k2/stories/{id}/flags
+DELETE /control-room-x9k2/stories/{id}
+```
+
+### 通報 / モデレーション
+```
+GET  /control-room-x9k2/reports
+GET  /control-room-x9k2/reports/pending
+POST /control-room-x9k2/reports/resolve
+GET  /control-room-x9k2/moderation
+```
+
+### BAN
+```
+GET  /control-room-x9k2/bans
+GET  /control-room-x9k2/bans/{id}
+POST /control-room-x9k2/bans
+GET  /control-room-x9k2/ip-bans
+```
+
+### コンテンツ管理
+```
+GET /control-room-x9k2/badges
+GET /control-room-x9k2/emoji
+GET /control-room-x9k2/frames         → アバターフレーム
+GET /control-room-x9k2/gacha
+GET /control-room-x9k2/themes
+GET /control-room-x9k2/announcements
+POST /control-room-x9k2/announcements
+```
+
+### 申請 / リクエスト
+```
+GET /control-room-x9k2/verification-requests
+GET /control-room-x9k2/bot-requests
+GET /control-room-x9k2/appeals
+```
+
+### システム
+```
+GET  /control-room-x9k2/settings
+POST /control-room-x9k2/settings
+GET  /control-room-x9k2/config
+GET  /control-room-x9k2/system
+GET  /control-room-x9k2/logs
+GET  /control-room-x9k2/audit
+GET  /control-room-x9k2/maintenance
+POST /control-room-x9k2/maintenance
+GET  /control-room-x9k2/backup
+POST /control-room-x9k2/backup
+GET  /control-room-x9k2/cron
+GET  /control-room-x9k2/webhooks
+GET  /control-room-x9k2/api-keys
+GET  /control-room-x9k2/sessions
+GET  /control-room-x9k2/queue
+GET  /control-room-x9k2/tasks
+```
+
+### その他管理
+```
+GET /control-room-x9k2/beta-experiment
+GET /control-room-x9k2/test-recommend
+GET /control-room-x9k2/test-trending
+GET /control-room-x9k2/survey-results
+GET /control-room-x9k2/feedback
+GET /control-room-x9k2/media
+GET /control-room-x9k2/uploads
+GET /control-room-x9k2/notifications
+GET /control-room-x9k2/invites
+GET /control-room-x9k2/features
+GET /control-room-x9k2/roles
+GET /control-room-x9k2/permissions
+GET /control-room-x9k2/radio
+GET /control-room-x9k2/draw
+GET /control-room-x9k2/dm
+GET /control-room-x9k2/emails
+GET /control-room-x9k2/actions
 ```
 
 ---
