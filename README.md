@@ -1050,6 +1050,123 @@ GET  /settings/{key}     → 個別設定取得
 
 ---
 
+## 管理パネル (Admin)
+
+秘匿パス: `/control-room-x9k2`
+全エンドポイントは管理者権限が必要 (`403: 管理者権限が必要です`)
+
+### ダッシュボード / 統計
+```
+GET /control-room-x9k2/dashboard
+GET /control-room-x9k2/analytics
+GET /control-room-x9k2/stats
+GET /control-room-x9k2/stats/users
+GET /control-room-x9k2/stats/posts
+GET /control-room-x9k2/stats/daily
+```
+
+### ユーザー管理
+```
+GET    /control-room-x9k2/users
+GET    /control-room-x9k2/users/{id}
+POST   /control-room-x9k2/users
+PATCH  /control-room-x9k2/users/{id}/ban
+PATCH  /control-room-x9k2/users/{id}/account
+PATCH  /control-room-x9k2/users/{id}/official-mark
+PATCH  /control-room-x9k2/users/{id}/flags
+DELETE /control-room-x9k2/users/{id}
+```
+
+### 投稿管理
+```
+GET    /control-room-x9k2/posts
+GET    /control-room-x9k2/posts/{id}
+PATCH  /control-room-x9k2/posts/{id}/flags
+DELETE /control-room-x9k2/posts/{id}
+```
+
+### ストーリー管理
+```
+GET    /control-room-x9k2/stories
+PATCH  /control-room-x9k2/stories/{id}/flags
+DELETE /control-room-x9k2/stories/{id}
+```
+
+### 通報 / モデレーション
+```
+GET  /control-room-x9k2/reports
+GET  /control-room-x9k2/reports/pending
+POST /control-room-x9k2/reports/resolve
+GET  /control-room-x9k2/moderation
+```
+
+### BAN
+```
+GET  /control-room-x9k2/bans
+GET  /control-room-x9k2/bans/{id}
+POST /control-room-x9k2/bans
+GET  /control-room-x9k2/ip-bans
+```
+
+### コンテンツ管理
+```
+GET /control-room-x9k2/badges
+GET /control-room-x9k2/emoji
+GET /control-room-x9k2/frames         → アバターフレーム
+GET /control-room-x9k2/gacha
+GET /control-room-x9k2/themes
+GET /control-room-x9k2/announcements
+POST /control-room-x9k2/announcements
+```
+
+### 申請 / リクエスト
+```
+GET /control-room-x9k2/verification-requests
+GET /control-room-x9k2/bot-requests
+GET /control-room-x9k2/appeals
+```
+
+### システム
+```
+GET  /control-room-x9k2/settings
+POST /control-room-x9k2/settings
+GET  /control-room-x9k2/config
+GET  /control-room-x9k2/system
+GET  /control-room-x9k2/logs
+GET  /control-room-x9k2/audit
+GET  /control-room-x9k2/maintenance
+POST /control-room-x9k2/maintenance
+GET  /control-room-x9k2/backup
+POST /control-room-x9k2/backup
+GET  /control-room-x9k2/cron
+GET  /control-room-x9k2/webhooks
+GET  /control-room-x9k2/api-keys
+GET  /control-room-x9k2/sessions
+GET  /control-room-x9k2/queue
+GET  /control-room-x9k2/tasks
+```
+
+### その他管理
+```
+GET /control-room-x9k2/beta-experiment
+GET /control-room-x9k2/test-recommend
+GET /control-room-x9k2/test-trending
+GET /control-room-x9k2/survey-results
+GET /control-room-x9k2/feedback
+GET /control-room-x9k2/media
+GET /control-room-x9k2/uploads
+GET /control-room-x9k2/notifications
+GET /control-room-x9k2/invites
+GET /control-room-x9k2/features
+GET /control-room-x9k2/roles
+GET /control-room-x9k2/permissions
+GET /control-room-x9k2/radio
+GET /control-room-x9k2/draw
+GET /control-room-x9k2/dm
+GET /control-room-x9k2/emails
+GET /control-room-x9k2/actions
+```
+
 ---
 
 ## APIキー
