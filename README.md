@@ -301,6 +301,16 @@ GET /posts/me/replies
 POST /posts/batch-views
 ```
 
+### ベータUIフィードバック
+```
+POST /posts/feedback/beta-survey
+Content-Type: application/json
+
+{
+  "preference": "beta" | "current"
+}
+```
+
 ### 返信先ユーザー取得
 ```
 GET /posts/{id}/reply-targets
