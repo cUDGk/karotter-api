@@ -405,24 +405,27 @@ GET /control-room-x9k2/search/index
 
 ---
 
-## 管理パネルUIプレビュー (Chrome拡張)
+## 管理パネルUIプレビュー手法
 
-非管理者でも管理パネルのUIだけを閲覧できるChrome拡張機能。
-APIは依然403を返すため、データは取得できない（UI構造の確認のみ）。
+非管理者でも管理パネルのUI構造を確認する方法。
+Adminチャンク内の `isAdmin` チェックをクライアント側で無効化することで、UIのみ閲覧可能になる。
+APIは依然403を返すため、実際のデータは取得できない。
 
-### 仕組み
+### 原理
 
-Karotter本体の `Admin-*.js` チャンクへのリクエストを、改変版JSにリダイレクトする。
-改変箇所は `isAdmin` チェックの無効化（`enabled: !!(null==_?void 0:_.isAdmin)` → `enabled: true`）のみ。
+Karotterの管理パネルは `Admin-*.js` というlazy-loadedチャンクで実装されている。
+このチャンク内のReact Queryクエリは全て `enabled: !!(null==_?void 0:_.isAdmin)` という条件が付いており、`isAdmin` が `false` の場合はクエリが実行されずUIもレンダリングされない。
 
-### ファイル構成
+この `enabled` 条件を `true` に書き換えた改変版チャンクを用意し、Chrome拡張の `declarativeNetRequest` で本物のチャンクへのリクエストを改変版にリダイレクトすれば、UIだけは表示される。
 
-**manifest.json**
+### 実装例
+
+**manifest.json** (Manifest V3)
 ```json
 {
   "manifest_version": 3,
-  "name": "Karotter Admin",
-  "version": "1.1",
+  "name": "Karotter Admin Viewer",
+  "version": "1.0",
   "permissions": ["declarativeNetRequest"],
   "host_permissions": ["https://karotter.com/*"],
   "declarative_net_request": {
@@ -462,20 +465,19 @@ Karotter本体の `Admin-*.js` チャンクへのリクエストを、改変版J
 ```
 
 **admin.js**
-- 本物の `Admin-*.js` チャンクのコピー
-- `enabled: !!(null==_?void 0:_.isAdmin)` を `enabled: true` に変更（全てのReact Queryクエリの `enabled` 条件）
-- これにより非管理者でもUIコンポーネントがレンダリングされる
+1. `https://karotter.com/assets/Admin-{hash}.js` の内容をコピー
+2. `enabled: !!(null==_?void 0:_.isAdmin)` を全て `enabled: true` に置換
+3. 拡張機能のルートに配置
 
-### インストール方法
+### 手順
 
-1. 3ファイルを同じフォルダに配置
-2. `chrome://extensions` を開く
-3. 「デベロッパーモード」ON
-4. 「パッケージ化されていない拡張機能を読み込む」でフォルダを選択
-5. `https://karotter.com/admin` にアクセス
+1. 上記3ファイルを同じフォルダに配置
+2. `chrome://extensions` → デベロッパーモード ON
+3. 「パッケージ化されていない拡張機能を読み込む」でフォルダを選択
+4. `https://karotter.com/admin` にアクセス
 
 ### 注意事項
 
-- **APIデータは取得不可** — 全エンドポイントが403を返すため、UIは表示されるがデータは空
-- **チャンクハッシュが変わると動作しなくなる** — Karotterのデプロイ毎にJSファイル名が変わるため、`rules.json` の `urlFilter` と `admin.js` のimportパスを更新する必要がある
-- **常時有効だとフロント挙動に影響** — 確認後は拡張機能を無効化推奨
+- **UIのみ表示、データは空** — 全APIエンドポイントが403を返すため
+- **チャンクハッシュはデプロイ毎に変わる** — `rules.json` の `urlFilter` と `admin.js` のimportパスを都度更新する必要がある
+- **使用後は拡張機能を無効化推奨** — 有効のままだとフロントエンドの挙動に影響する可能性がある
