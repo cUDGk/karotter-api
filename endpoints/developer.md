@@ -181,6 +181,34 @@ Response 200: {"posts": [...], "pagination": {"page", "limit", "total", "pages"}
 
 ---
 
+---
+
+## Twitter API v2 互換エンドポイント
+
+KarotterはTwitter (X) API v2と部分的に互換性のあるエンドポイントを提供している。
+既存のTwitter Bot資産をそのまま、あるいは最小限の変更で移植できる。
+
+**ベースパス:** `/api/developer/2/`
+
+| メソッド | パス | 説明 | Twitter API v2 対応 |
+|---------|------|------|-------------------|
+| GET | `/developer/2/users/me` | 認証中ユーザー情報 | `GET /2/users/me` |
+| GET | `/developer/2/users/by/username/:username` | ユーザー名でユーザー検索 | `GET /2/users/by/username/:username` |
+| GET | `/developer/2/users/:id/tweets` | ユーザーの投稿一覧 | `GET /2/users/:id/tweets` |
+| GET | `/developer/2/users/:id/timelines/reverse_chronological` | ホームタイムライン | `GET /2/users/:id/timelines/reverse_chronological` |
+| POST | `/developer/2/tweets` | 投稿作成 | `POST /2/tweets` |
+| GET | `/developer/2/tweets/:id` | 投稿詳細取得 | `GET /2/tweets/:id` |
+| GET | `/developer/2/tweets/search/recent?query=...&max_results=10` | 投稿検索 | `GET /2/tweets/search/recent` |
+
+### 注意事項
+
+- 認証は通常のDeveloper APIと同じ (`Authorization: Bearer {apiKey}`)
+- レスポンス形式はTwitter API v2に準拠（カロッター独自のDeveloper APIとは異なる）
+- [公式発表](https://karotter.com/karon/status/69145/share) で互換性が確認されている
+- ユーザー名検索が可能（通常のDeveloper APIでは数値IDのみ）
+
+---
+
 ## 備考
 
 - APIキーは `kar_live_` プレフィックスの形式
