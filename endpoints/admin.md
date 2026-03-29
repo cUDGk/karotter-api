@@ -402,3 +402,80 @@ GET /control-room-x9k2/trending/override
 GET /control-room-x9k2/search
 GET /control-room-x9k2/search/index
 ```
+
+---
+
+## 管理パネルUIプレビュー (Chrome拡張)
+
+非管理者でも管理パネルのUIだけを閲覧できるChrome拡張機能。
+APIは依然403を返すため、データは取得できない（UI構造の確認のみ）。
+
+### 仕組み
+
+Karotter本体の `Admin-*.js` チャンクへのリクエストを、改変版JSにリダイレクトする。
+改変箇所は `isAdmin` チェックの無効化（`enabled: !!(null==_?void 0:_.isAdmin)` → `enabled: true`）のみ。
+
+### ファイル構成
+
+**manifest.json**
+```json
+{
+  "manifest_version": 3,
+  "name": "Karotter Admin",
+  "version": "1.1",
+  "permissions": ["declarativeNetRequest"],
+  "host_permissions": ["https://karotter.com/*"],
+  "declarative_net_request": {
+    "rule_resources": [{
+      "id": "ruleset_1",
+      "enabled": true,
+      "path": "rules.json"
+    }]
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["admin.js"],
+      "matches": ["https://karotter.com/*"]
+    }
+  ]
+}
+```
+
+**rules.json**
+```json
+[
+  {
+    "id": 1,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/admin.js"
+      }
+    },
+    "condition": {
+      "urlFilter": "https://karotter.com/assets/Admin-*.js",
+      "resourceTypes": ["script", "xmlhttprequest"]
+    }
+  }
+]
+```
+
+**admin.js**
+- 本物の `Admin-*.js` チャンクのコピー
+- `enabled: !!(null==_?void 0:_.isAdmin)` を `enabled: true` に変更（全てのReact Queryクエリの `enabled` 条件）
+- これにより非管理者でもUIコンポーネントがレンダリングされる
+
+### インストール方法
+
+1. 3ファイルを同じフォルダに配置
+2. `chrome://extensions` を開く
+3. 「デベロッパーモード」ON
+4. 「パッケージ化されていない拡張機能を読み込む」でフォルダを選択
+5. `https://karotter.com/admin` にアクセス
+
+### 注意事項
+
+- **APIデータは取得不可** — 全エンドポイントが403を返すため、UIは表示されるがデータは空
+- **チャンクハッシュが変わると動作しなくなる** — Karotterのデプロイ毎にJSファイル名が変わるため、`rules.json` の `urlFilter` と `admin.js` のimportパスを更新する必要がある
+- **常時有効だとフロント挙動に影響** — 確認後は拡張機能を無効化推奨
