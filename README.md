@@ -153,9 +153,12 @@ GET  /auth/sessions                  → 全セッション一覧
 DELETE /auth/sessions/:id            → 特定セッション削除
 DELETE /auth/sessions/others         → 他の全セッションを削除
 DELETE /auth/sessions/all            → 全セッション削除
-POST /auth/switch-session            → セッション切り替え
-  Body: {"sessionId": "..."} または {"userId": ...}
-  ※ セッションIDまたはユーザーIDが必要
+POST /auth/switch-session            → セッション切り替え (マルチアカウント用)
+  Body: {"sessionId": "uuid"} または {"userId": 12345}
+  Response 200: {"accessToken": "jwt...", "sessionId": "uuid", "user": {...}}
+  ※ 新しいアクセストークンとセッションIDが発行される
+  ※ 空Body: 400 {"error": "セッションIDまたはユーザーIDが必要です"}
+  ※ 無効なセッション: 401 {"error": "無効なセッションです"}
 POST /auth/session-unread-snapshots  → 未読スナップショット
 ```
 
