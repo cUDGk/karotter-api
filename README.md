@@ -1,5 +1,10 @@
 # Karotter API Reference
 
+[![Status](https://img.shields.io/badge/Status-非公式_·_都度更新-red)](#注意事項)
+[![Endpoints](https://img.shields.io/badge/Endpoints-14_カテゴリ-blue)](#ファイル構成)
+[![Auth](https://img.shields.io/badge/認証-APIキー_·_Cookie-green)](#認証方式)
+[![Realtime](https://img.shields.io/badge/リアルタイム-Socket.IO-purple)](endpoints/socket.md)
+
 Karotter (カロッター) の非公式APIリファレンスです。
 フロントエンドのJSバンドル解析、実際のAPIテスト、セキュリティ診断レポート、および公式ドキュメントに基づいて作成しています。
 
