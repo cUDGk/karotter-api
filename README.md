@@ -1,3 +1,7 @@
+#恐らく仕様変更が入ってますが対応できていません
+単にBOTを作りたいだけならこちらの検討をよろしくお願いします
+https://github.com/cUDGk/karotter-selfbot
+
 # Karotter API Reference
 
 [![Status](https://img.shields.io/badge/Status-非公式_·_都度更新-red)](#注意事項)
