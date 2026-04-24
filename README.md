@@ -1,18 +1,38 @@
-# 恐らく仕様変更が入ってますが対応できていません
-単にBOTを作りたいだけならこちらの検討をよろしくお願いします
-https://github.com/cUDGk/karotter-selfbot
+<div align="center">
 
 # Karotter API Reference
 
-[![Status](https://img.shields.io/badge/Status-非公式_·_都度更新-red)](#注意事項)
-[![Endpoints](https://img.shields.io/badge/Endpoints-14_カテゴリ-blue)](#ファイル構成)
-[![Auth](https://img.shields.io/badge/認証-APIキー_·_Cookie-green)](#認証方式)
-[![Realtime](https://img.shields.io/badge/リアルタイム-Socket.IO-purple)](endpoints/socket.md)
+### Karotter (カロッター) の非公式 API リファレンス
 
-Karotter (カロッター) の非公式APIリファレンスです。
-フロントエンドのJSバンドル解析、実際のAPIテスト、セキュリティ診断レポート、および公式ドキュメントに基づいて作成しています。
+[![Status](https://img.shields.io/badge/Status-非公式_·_都度更新-red?style=flat)](#注意事項)
+[![Endpoints](https://img.shields.io/badge/Endpoints-14_カテゴリ-blue?style=flat)](#ファイル構成)
+[![Auth](https://img.shields.io/badge/認証-APIキー_·_Cookie-green?style=flat)](#認証方式)
+[![Realtime](https://img.shields.io/badge/リアルタイム-Socket.IO-purple?style=flat)](endpoints/socket.md)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green?style=flat)](LICENSE)
+
+**フロントエンド JS バンドル解析 + 実 API テスト + セキュリティ診断レポートから作成した都度更新ドキュメント。**
 
 ---
+
+</div>
+
+> **⚠️ 注意**: 恐らく仕様変更が入っていますが対応できていません。単に Bot を作りたいだけなら [karotter-selfbot](https://github.com/cUDGk/karotter-selfbot) を検討してください。
+
+## 概要
+
+Karotter (カロッター) の非公式 API リファレンス。フロントエンドの JS バンドル解析、実際の API テスト、セキュリティ診断レポート、および公式ドキュメントに基づいて作成しています。
+
+
+## 特徴
+
+| 項目 | 内容 |
+|---|---|
+| エンドポイント | 14 カテゴリ、約 145 件 |
+| 認証 | API キー / Cookie |
+| リアルタイム | Socket.IO イベント ~35 種 |
+| 作成元 | JS バンドル解析 + 実 API テスト + セキュリティ診断 |
+| 対象 | `karotter.com` / `karotter.jp` |
+
 
 ## Base URL
 
@@ -281,3 +301,7 @@ DM添付: /uploads/dm/{uuid}.{ext}
 1. 初回は `cursor` なしでリクエスト → 最新N件を取得
 2. レスポンスの最後の投稿IDを `cursor` に指定 → それ以前のデータを取得
 3. データの重複なく過去を遡れる
+
+## ライセンス
+
+MIT License — 詳細は [LICENSE](LICENSE) を参照。
